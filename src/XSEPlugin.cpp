@@ -10,6 +10,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 
 	case SKSE::MessagingInterface::kPostLoadGame:
 		updateMannequinBase();
+		updateMannequinRef();
 		break;
 	}
 }
