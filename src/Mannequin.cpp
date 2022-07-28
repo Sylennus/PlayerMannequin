@@ -11,36 +11,55 @@ void updateMannequinBase()  // change sex, race, weight, height, and skin color
 	mannequinBase->height = playerBase->GetHeight();
 	mannequinBase->bodyTintColor = playerBase->bodyTintColor;
 
-	//Actor::DoReset3D(bool a_updateWeight) ?
-	//Actor::UpdateSkinColor() ?
 	//TESNPC::UpdateNeck(BSFaceGenNiNode* a_faceNode)
 }
 
-void updateMannequinRef()
+int updateMannequinRef()
 {
-	auto p1 = RE::ProcessLists::GetSingleton();
+	int ret = 0;
 
 	SKSE::GetTaskInterface()->AddTask([&]() {
+
+		auto p1 = RE::ProcessLists::GetSingleton();
+
 		for (auto& handle : p1->highActorHandles) {
-			RE::Actor* actor = handle.get().get();
+			auto actorPtr = handle.get();
+			if (!actorPtr)
+				continue;
+			RE::Actor* actor = actorPtr.get();
 			if (!actor)
+				continue;
+			if (!actor->Is3DLoaded())
 				continue;
 			if (!actor->GetRace())
 				continue;
 			if (actor->GetRace()->formID == 0x10760A)  //Manakin Race (to improve)
 			{
-				actor->DoReset3D(true);
+				// actor->DoReset3D(true); // doesn't update
+				actor->Update3DModel();
+				actor->UpdateSkinColor();
+				ret++;
 			}
 		}
 	});
+
+	//const auto cell = RE::PlayerCharacter::GetSingleton()->GetParentCell();
+	//cell->ForEachReference([&](RE::TESObjectREFR& a_ref) {
+	//	if (a_ref.Is(RE::FormType::NPC) && a_ref.GetBaseObject()->As<RE::TESNPC>()->GetRace()->formID == 0x10760A) {  // ManakinRace
+	//		// do your thing
+	//	}
+	//})
+
+	return ret;
 }
 
 
 void SetActorBaseDataFlag(RE::TESActorBaseData* actorBaseData, RE::ACTOR_BASE_DATA::Flag flag, bool enable)
 {
-	if (actorBaseData) {
+	if (actorBaseData)
+	{
 		using func_t = decltype(&SetActorBaseDataFlag);
-		REL::Relocation<func_t> func{ REL::ID(14261) };
+		REL::Relocation<func_t> func{ REL::RelocationID(14261, 14383) };
 		return func(actorBaseData, flag, enable);
 	}
 }
