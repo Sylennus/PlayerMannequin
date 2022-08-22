@@ -6,8 +6,8 @@ RE::BSEventNotifyControl MenuOpenCloseEventHandler::ProcessEvent(const RE::MenuO
 	if (a_event) {
 		if (a_event->menuName == "RaceSex Menu" && !a_event->opening)
 		{
-			UpdateMannequinBase();
-			UpdateMannequinRef();
+			UpdateMannequinBases();
+			UpdateMannequinReferences();
 		}
 	}
 	return RE::BSEventNotifyControl::kContinue;

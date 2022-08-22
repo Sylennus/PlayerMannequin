@@ -1,19 +1,26 @@
 #include "Mannequin.h"
 
-void UpdateMannequinBase()  // Update mannequin base (face, sex, race, weight, height, and skin color)
+void UpdateMannequinBases()  // Update mannequin base (face, sex, race, weight, height, and skin color)
 {
+	auto handler = RE::TESDataHandler::GetSingleton();
+	
 	RE::TESNPC* playerBase = RE::PlayerCharacter::GetSingleton()->GetActorBase();
-	RE::TESNPC* mannequinBase = RE::TESForm::LookupByID<RE::TESNPC>(0x89A85);
+	std::array<RE::TESNPC*, 2> mannequinBases;
+	mannequinBases[0] = RE::TESForm::LookupByID<RE::TESNPC>(0x89A85); // Vanilla Mannequin
+	mannequinBases[1] = handler->LookupForm<RE::TESNPC>(0x15D5D, "HearthFires.esm");  // HearthFire Mannequin
 
-	mannequinBase->faceNPC = playerBase;
-	SetActorBaseDataFlag(mannequinBase, RE::ACTOR_BASE_DATA::Flag::kFemale, playerBase->GetSex());
-	mannequinBase->race = playerBase->GetRace();
-	mannequinBase->weight = playerBase->GetWeight();
-	mannequinBase->height = playerBase->GetHeight(); // To improve, doesn't work with RaceMenu Height
-	mannequinBase->bodyTintColor = playerBase->bodyTintColor;
+	for (int i = 0; i < mannequinBases.size(); i++)
+	{
+		mannequinBases[i]->faceNPC = playerBase;
+		SetActorBaseDataFlag(mannequinBases[i], RE::ACTOR_BASE_DATA::Flag::kFemale, playerBase->GetSex());
+		mannequinBases[i]->race = playerBase->GetRace();
+		mannequinBases[i]->weight = playerBase->GetWeight();
+		mannequinBases[i]->height = playerBase->GetHeight();  // To improve, doesn't work with RaceMenu Height
+		mannequinBases[i]->bodyTintColor = playerBase->bodyTintColor;
+	}
 }
 
-void UpdateMannequinRef() // Check for and update nearby mannequin references
+void UpdateMannequinReferences() // Check for and update nearby mannequin references
 {
 	SKSE::GetTaskInterface()->AddTask([&]()
 	{
