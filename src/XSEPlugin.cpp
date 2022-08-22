@@ -4,13 +4,19 @@
 void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 {
 	switch (a_message->type) {
+
 	case SKSE::MessagingInterface::kDataLoaded:
 		MenuOpenCloseEventHandler::Register();
 		break;
 
 	case SKSE::MessagingInterface::kPostLoadGame:
-		updateMannequinBase();
-		updateMannequinRef();
+		std::thread([]() {
+			std::this_thread::sleep_for(std::chrono::seconds(3)); // Delay for RaceMenu overlays update
+			SKSE::GetTaskInterface()->AddTask([]() {
+				UpdateMannequinBase();
+				UpdateMannequinRef();
+			});
+		}).detach();
 		break;
 	}
 }
