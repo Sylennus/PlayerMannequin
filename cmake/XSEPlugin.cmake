@@ -23,7 +23,11 @@ else()
 	)
 endif()
 
-add_library("${PROJECT_NAME}" SHARED)
+find_package(CommonLibSSE CONFIG REQUIRED)
+
+add_commonlibsse_plugin(${PROJECT_NAME}
+    SOURCES ${headers} ${sources}
+)
 
 target_compile_features(
 	"${PROJECT_NAME}"
@@ -37,12 +41,6 @@ include(AddCXXFiles)
 add_cxx_files("${PROJECT_NAME}")
 
 configure_file(
-	${CMAKE_CURRENT_SOURCE_DIR}/cmake/Plugin.h.in
-	${CMAKE_CURRENT_BINARY_DIR}/cmake/Plugin.h
-	@ONLY
-)
-
-configure_file(
 	${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.rc.in
 	${CMAKE_CURRENT_BINARY_DIR}/cmake/version.rc
 	@ONLY
@@ -51,7 +49,6 @@ configure_file(
 target_sources(
 	"${PROJECT_NAME}"
 	PRIVATE
-		${CMAKE_CURRENT_BINARY_DIR}/cmake/Plugin.h
 		${CMAKE_CURRENT_BINARY_DIR}/cmake/version.rc
 		.clang-format
 		.editorconfig)
@@ -93,7 +90,7 @@ if (CMAKE_GENERATOR MATCHES "Visual Studio")
 			/MP
 			/await
 			/W4
-			/WX
+			/WX-
 			/permissive-
 			/Zc:alignedNew
 			/Zc:auto
@@ -135,11 +132,8 @@ endif()
 find_package(nlohmann_json CONFIG REQUIRED)
 
 if (BUILD_SKYRIM)
-	find_package(CommonLibSSE REQUIRED)
 	target_link_libraries(
 		${PROJECT_NAME} 
-		PUBLIC 
-			CommonLibSSE::CommonLibSSE
 		PRIVATE
 			nlohmann_json::nlohmann_json
 	)

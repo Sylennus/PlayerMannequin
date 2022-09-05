@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cstdint>
+
+#include <memory>
+
 #pragma warning(push)
 #pragma warning(disable: 5105)
 #pragma warning(disable: 4189)
@@ -15,6 +19,7 @@
 #else
 #	include "RE/Skyrim.h"
 #	include "SKSE/SKSE.h"
+#   include "REL/Relocation.h"
 #	if defined(SKYRIMAE)
 #		define RUNTIME 0
 #	elif defined(SKYRIMVR)
@@ -27,11 +32,8 @@
 #include <ShlObj_core.h>
 #include <Windows.h>
 
-#ifdef NDEBUG
-#	include <spdlog/sinks/basic_file_sink.h>
-#else
-#	include <spdlog/sinks/msvc_sink.h>
-#endif
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/msvc_sink.h>
 
 #pragma warning(pop)
 
@@ -65,13 +67,9 @@ namespace stl
 	}
 }
 
-namespace logger = SKSE::log;
-
 namespace util
 {
 	using SKSE::stl::report_and_fail;
 }
 
 #define DLLEXPORT __declspec(dllexport)
-
-#include "Plugin.h"

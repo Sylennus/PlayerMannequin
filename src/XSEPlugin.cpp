@@ -1,84 +1,106 @@
+#include "PCH.h"
+#include "MannequinInterface.h"
 #include "Events.h"
-#include "Mannequin.h"
+#include "SKEE.h"
 
-void MessageHandler(SKSE::MessagingInterface::Message* a_message)
+using namespace SKSE;
+
+void InitializeHooks()
 {
-	switch (a_message->type) {
+	MannequinInterface::InstallHooks();
+	MenuOpenCloseEventHandler::Register();
+}
 
-	case SKSE::MessagingInterface::kDataLoaded:
-		MenuOpenCloseEventHandler::Register();
-		break;
+void InitializeMessaging()
+{
+	if (!GetMessagingInterface()->RegisterListener([](MessagingInterface::Message* message)	{
+		switch (message->type) {
+		case MessagingInterface::kPostLoad:
+		{
+			auto map = SKEE::GetInterfaceMap();
+			if (!map) {
+				log::critical("Couldn't get the SKEE InterfaceMap!");
+				return;
+			}
 
-	case SKSE::MessagingInterface::kPostLoadGame:
-		std::thread([]() {
-			std::this_thread::sleep_for(std::chrono::seconds(3)); // Delay for RaceMenu overlays update
-			SKSE::GetTaskInterface()->AddTask([]() {
-				UpdateMannequinBases();
-				UpdateMannequinReferences();
-			});
-		}).detach();
-		break;
+			auto transform = SKEE::GetNiTransformInterface(map);
+			if (!transform) {
+				log::critical("Couldn't get the SKEE NiTransform Interface!");
+				return;
+			}
+
+			auto version = transform->GetVersion();
+			log::info("Version: {}", version);
+			if (version < 3) {
+				log::critical("SKEE NiTransform Interface is too old. Version must be 3 or greater (v{} currently installed)", version);
+				return;
+			}
+			break;
+		}
+
+		case MessagingInterface::kDataLoaded:
+			InitializeHooks();
+			break;
+
+		case MessagingInterface::kPostLoadGame:
+			auto currentTime = std::chrono::steady_clock::now();
+			MannequinInterface::GetSingleton()->loadTime = &currentTime;
+			MannequinInterface::GetSingleton()->updateMannequins = true;
+			break;
+		}
+	})) {
+		util::report_and_fail("Unable to register message listener.");
 	}
 }
 
-void InitializeLog()
+void InitializeLogging()
 {
-#ifndef NDEBUG
-	auto sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
-#else
-	auto path = logger::log_directory();
-	if (!path) {
-		util::report_and_fail("Failed to find standard logging directory"sv);
-	}
-
-	*path /= fmt::format("{}.log"sv, Plugin::NAME);
-	auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true);
-#endif
-
 #ifndef NDEBUG
 	const auto level = spdlog::level::trace;
 #else
 	const auto level = spdlog::level::info;
 #endif
 
-	auto log = std::make_shared<spdlog::logger>("global log"s, std::move(sink));
+	auto path = log::log_directory();
+	if (!path)
+		util::report_and_fail("Unable to lookup SKSE logs directory.");
+
+	*path /= PluginDeclaration::GetSingleton()->GetName();
+	*path += L".log";
+
+	std::shared_ptr<spdlog::logger> log;
+
+	if (IsDebuggerPresent()) {
+		log = std::make_shared<spdlog::logger>(
+			"Global", std::make_shared<spdlog::sinks::msvc_sink_mt>());
+	} else {
+		log = std::make_shared<spdlog::logger>(
+			"Global", std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true));
+	}
+
 	log->set_level(level);
 	log->flush_on(level);
 
 	spdlog::set_default_logger(std::move(log));
-	spdlog::set_pattern("[%l] %v"s);
+	spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%t] [%s:%#] %v");
 }
 
-EXTERN_C [[maybe_unused]] __declspec(dllexport) bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
+SKSEPluginLoad(const LoadInterface* skse)
 {
 #ifndef NDEBUG
 	while (!IsDebuggerPresent()) {};
 #endif
 
-	InitializeLog();
+	InitializeLogging();
 
-	logger::info("Loaded plugin");
+	auto* plugin = PluginDeclaration::GetSingleton();
+	auto  version = plugin->GetVersion();
 
-	SKSE::Init(a_skse);
+	log::info("{} {} is loading...", plugin->GetName(), version);
 
-	const auto messaging = SKSE::GetMessagingInterface();
-	messaging->RegisterListener(MessageHandler);
+	Init(skse);
+	InitializeMessaging();
 
-	return true;
-}
-
-EXTERN_C [[maybe_unused]] __declspec(dllexport) constinit auto SKSEPlugin_Version = []() noexcept {
-	SKSE::PluginVersionData v;
-	v.PluginName("PlayerMannequin");
-	v.PluginVersion({ 1, 0, 0, 0 });
-	v.UsesAddressLibrary(true);
-	return v;
-}();
-
-EXTERN_C [[maybe_unused]] __declspec(dllexport) bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface*, SKSE::PluginInfo* pluginInfo)
-{
-	pluginInfo->name = SKSEPlugin_Version.pluginName;
-	pluginInfo->infoVersion = SKSE::PluginInfo::kVersion;
-	pluginInfo->version = SKSEPlugin_Version.pluginVersion;
+	log::info("{} has finished loading.", plugin->GetName());
 	return true;
 }
