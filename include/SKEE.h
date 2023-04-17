@@ -1,7 +1,5 @@
 #pragma once
 
-#include "PCH.h"
-
 namespace SKEE
 {
 	class IPluginInterface
@@ -156,6 +154,21 @@ namespace SKEE
 		virtual void UpdateNodeTransforms(RE::TESObjectREFR* a_refr, bool a_firstPerson, bool a_female, const char* a_node) = 0;
 	};
 
+	class IOverlayInterface : public IPluginInterface, public IAddonAttachmentInterface
+	{
+	public:
+		virtual uint32_t GetVersion() = 0;
+
+		virtual void Save(SKSE::SerializationInterface* intfc, uint32_t kVersion) = 0;
+		virtual bool Load(SKSE::SerializationInterface* intfc, uint32_t kVersion) = 0;
+		virtual void Revert() = 0;
+
+		virtual bool HasOverlays(RE::TESObjectREFR* reference) = 0;
+		virtual void AddOverlays(RE::TESObjectREFR* reference) = 0;
+		virtual void RemoveOverlays(RE::TESObjectREFR* reference) = 0;
+		virtual void InstallOverlay(const char* nodeName, const char* path, RE::TESObjectREFR* refr, RE::BSGeometry* source, RE::NiNode* destination, RE::BSTextureSet* textureSet = NULL) = 0;
+	};
+
 	class IAttachmentInterface : public IPluginInterface
 	{
 	public:
@@ -181,7 +194,7 @@ namespace SKEE
 		InterfaceExchangeMessage msg;
 		auto                     sender = InterfaceExchangeMessage::kExchangeInterface;
 		auto                     intfc = SKSE::GetMessagingInterface();
-		intfc->Dispatch(sender, (void*)&msg, sizeof(InterfaceExchangeMessage*), "skee");
+		intfc->Dispatch(sender, (void*)&msg, sizeof(InterfaceExchangeMessage*), "SKEE");
 		return msg.interfaceMap ? msg.interfaceMap : nullptr;
 	}
 
@@ -195,6 +208,12 @@ namespace SKEE
 	{
 		auto intfc = a_map->QueryInterface("NiTransform");
 		return static_cast<INiTransformInterface*>(intfc);
+	}
+
+	inline IOverlayInterface* GetOverlayInterface(IInterfaceMap* a_map)
+	{
+		auto intfc = a_map->QueryInterface("Overlay");
+		return static_cast<IOverlayInterface*>(intfc);
 	}
 
 	inline IAttachmentInterface* GetAttachmentInterface(IInterfaceMap* a_map)

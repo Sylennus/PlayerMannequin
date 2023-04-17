@@ -26,7 +26,7 @@ endif()
 find_package(CommonLibSSE CONFIG REQUIRED)
 
 add_commonlibsse_plugin(${PROJECT_NAME}
-    SOURCES ${headers} ${sources}
+	SOURCES ${headers} ${sources}
 )
 
 target_compile_features(
@@ -109,7 +109,6 @@ if (CMAKE_GENERATOR MATCHES "Visual Studio")
 			/Zc:strictStrings
 			/Zc:ternary
 			/Zc:threadSafeInit
-			/Zc:trigraphs
 			/Zc:wchar_t
 			/wd4200 # nonstandard extension used : zero-sized array in struct/union
 	)

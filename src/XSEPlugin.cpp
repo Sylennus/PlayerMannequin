@@ -15,41 +15,12 @@ void InitializeMessaging()
 {
 	if (!GetMessagingInterface()->RegisterListener([](MessagingInterface::Message* message)	{
 		switch (message->type) {
-		case MessagingInterface::kPostLoad:
-		{
-			auto map = SKEE::GetInterfaceMap();
-			if (!map) {
-				log::critical("Couldn't get the SKEE InterfaceMap!");
-				return;
-			}
-
-			auto transform = SKEE::GetNiTransformInterface(map);
-			if (!transform) {
-				log::critical("Couldn't get the SKEE NiTransform Interface!");
-				return;
-			}
-
-			auto version = transform->GetVersion();
-			log::info("Version: {}", version);
-			if (version < 3) {
-				log::critical("SKEE NiTransform Interface is too old. Version must be 3 or greater (v{} currently installed)", version);
-				return;
-			}
-			break;
-		}
-
 		case MessagingInterface::kDataLoaded:
 			InitializeHooks();
 			break;
-
-		case MessagingInterface::kPostLoadGame:
-			auto currentTime = std::chrono::steady_clock::now();
-			MannequinInterface::GetSingleton()->loadTime = &currentTime;
-			MannequinInterface::GetSingleton()->updateMannequins = true;
-			break;
 		}
 	})) {
-		util::report_and_fail("Unable to register message listener.");
+		util::report_and_fail("Unable to register message listener");
 	}
 }
 

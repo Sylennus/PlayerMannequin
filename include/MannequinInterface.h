@@ -1,14 +1,45 @@
 #pragma once
 
+#include "SKEE.h"
+
 class MannequinInterface
 {
 public:
-
 	MannequinInterface();
 
-	bool updateMannequins;
-	std::array<RE::TESNPC*, 2> mannequinBases;
-	std::chrono::steady_clock::time_point* loadTime;
+	struct Morph
+	{
+		std::string name;
+		std::string key;
+		float       value;
+	};
+
+	struct Node
+	{
+		std::string node;
+		std::string key;
+		float       scale;
+		uint32_t    scaleMode = 0;
+	};
+
+	struct Overlay
+	{
+		std::string                       nodeName;
+		RE::BSLightingShaderMaterialBase* material;
+	};
+
+	bool                                  updateMannequins;
+	std::array<RE::TESNPC*, 2>            mannequinBases;
+	std::chrono::steady_clock::time_point loadTime;
+	std::chrono::steady_clock::time_point currentTime;
+	std::chrono::seconds                  delay;
+	std::vector<Morph>                    playerMorphs;
+	std::vector<Node>                     playerNodes;
+	std::vector<Overlay>                  playerOverlays;
+	SKEE::IInterfaceMap*                  iMap = nullptr;
+	SKEE::IBodyMorphInterface*            iBodyMorph = nullptr;
+	SKEE::INiTransformInterface*          iNiTransform = nullptr;
+	SKEE::IOverlayInterface*              iOverlay = nullptr;
 
 	static void InstallHooks()
 	{
@@ -24,6 +55,11 @@ public:
 	void UpdateMannequins();
 	void UpdateMannequinBases();
 	void UpdateMannequinReferences();
+	void FinishUpdate(RE::ActorHandle handle);
+	void UpdatePlayerMorphs();
+	void UpdatePlayerNodes();
+	void UpdatePlayerOverlays();
+	void UpdateMannequinOverlays(RE::ActorHandle handle);
 
 protected:
 	struct Hooks
