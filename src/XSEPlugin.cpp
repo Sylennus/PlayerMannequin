@@ -2,6 +2,7 @@
 #include "MannequinInterface.h"
 #include "Events.h"
 #include "SKEE.h"
+#include "SKEEInterface.cpp"
 
 using namespace SKSE;
 

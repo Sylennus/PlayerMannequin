@@ -54,12 +54,12 @@ public:
 
 	void UpdateMannequins();
 	void UpdateMannequinBases();
-	void UpdateMannequinReferences();
-	void FinishUpdate(RE::ActorHandle handle);
-	void UpdatePlayerMorphs();
-	void UpdatePlayerNodes();
-	void UpdatePlayerOverlays();
-	void UpdateMannequinOverlays(RE::ActorHandle handle);
+	void RegisterPlayerMorphs();
+	void RegisterPlayerNodes();
+	void RegisterPlayerOverlays();
+	void FindMannequinReferences();
+	void UpdateMannequinReference(RE::FormID mannequinRefID);
+	void UpdateMannequinOverlays(RE::FormID mannequinRefID);
 
 protected:
 	struct Hooks
