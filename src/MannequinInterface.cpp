@@ -22,45 +22,45 @@ MannequinInterface::MannequinInterface()
 	currentTime = std::chrono::steady_clock::now();
 	delay = std::chrono::seconds(0);
 
-	iMap = SKEE::GetInterfaceMap();	// Check if SKEE is installed
+	iMap = SKEE::GetInterfaceMap();	// Check if SKEE/RaceMenu is installed
 
 	if (iMap) {
 
-		auto bodyMorph = SKEE::GetBodyMorphInterface(iMap);
+		if (auto bodyMorph = SKEE::GetBodyMorphInterface(iMap)) {
 
-		if (bodyMorph) {
 			auto version = bodyMorph->GetVersion();
+
 			if (version >= 4) {
 				iBodyMorph = bodyMorph;
 			} else {
-				logger::warn("SKEE BodyMorph Interface is too old. Version must be 4 or greater (v{} currently installed)", version);
+				logger::warn("SKEE BodyMorph Interface v{} is installed. Version must be 4 or greater for full functionnality", version);
 			}
+
 		} else {
 			logger::warn("Couldn't get SKEE BodyMorph Interface");
 		}
 
-		auto niTransform = SKEE::GetNiTransformInterface(iMap);
+		if (auto niTransform = SKEE::GetNiTransformInterface(iMap)) {
 
-		if (niTransform) {
 			auto version = niTransform->GetVersion();
+
 			if (version >= 3) {
 				iNiTransform = niTransform;
 			} else {
-				logger::warn("SKEE NiTransform Interface is too old. Version must be 3 or greater (v{} currently installed)", version);
+				logger::warn("SKEE NiTransform Interface v{} is installed. Version must be 3 or greater for full functionnality", version);
 			}
+
 		} else {
 			logger::warn("Couldn't get SKEE NiTransform Interface");
 		}
 
-		auto overlay = SKEE::GetOverlayInterface(iMap);
-
-		if (overlay)
+		if (auto overlay = SKEE::GetOverlayInterface(iMap))
 			iOverlay = overlay;
 		else
 			logger::warn("Couldn't get SKEE Overlay Interface");
 
 	} else {
-		logger::warn("Couldn't SKEE Interface Map");
+		logger::warn("Couldn't get SKEE Interface Map");
 	}
 }
 
@@ -72,7 +72,7 @@ void MannequinInterface::UpdateMannequins()
 	currentTime = std::chrono::steady_clock::now();
 	delay = std::chrono::duration_cast<std::chrono::seconds>(currentTime - loadTime);
 
-	if (delay.count() < 2)	// Delay to let SKEE properly load overlays & colors
+	if (delay.count() < 2)	// Delay to let SKEE properly load overlays, colors, etc.
 		return;
 
 	updateMannequins = false;
@@ -88,7 +88,7 @@ void MannequinInterface::UpdateMannequins()
 	FindMannequinReferences();
 }
 
-void MannequinInterface::UpdateMannequinBases()	// Update mannequin base (face, sex, race, weight, skin color, etc.)
+void MannequinInterface::UpdateMannequinBases()	// Update mannequin base (head parts, sex, race, weight, skin color, etc.)
 {
 	auto player = RE::PlayerCharacter::GetSingleton();
 	auto playerBase = player->GetActorBase();
@@ -101,7 +101,7 @@ void MannequinInterface::UpdateMannequinBases()	// Update mannequin base (face, 
 	for (auto& mannequinBase : mannequinBases) {
 		
 		SetActorBaseDataFlag(mannequinBase, RE::ACTOR_BASE_DATA::Flag::kFemale, playerSex);
-		mannequinBase->RemoveChange(RE::TESNPC::ChangeFlags::kGender);	// To avoid baking sex into save
+		mannequinBase->RemoveChange(RE::TESNPC::ChangeFlags::kGender);	// To avoid baking mannequins' sex into save
 		mannequinBase->race = playerRace;
 		mannequinBase->height = playerHeight;	// ?
 		mannequinBase->weight = playerWeight;
@@ -121,7 +121,7 @@ void MannequinInterface::RegisterPlayerMorphs()
 		playerMorphs.clear();
 
 	if (iBodyMorph) {
-		auto        player = RE::PlayerCharacter::GetSingleton();
+		auto player = RE::PlayerCharacter::GetSingleton();
 		NameVisitor visitor;
 		KeyVisitor  keyVisitor;
 
@@ -269,14 +269,14 @@ void MannequinInterface::UpdateMannequinOverlays(RE::FormID mannequinRefID)
 	auto actor = RE::TESForm::LookupByID<RE::Actor>(mannequinRefID);
 
 	if (!actor) {
-		logger::error("Failed to access mannequin (RefID {:x})", mannequinRefID);
+		logger::error("Failed to access a mannequin (RefID {:x})", mannequinRefID);
 		return;
 	}
 	
 	auto actorModel = actor->Get3D(false);
 
 	if (!actorModel) {
-		logger::error("Failed to access 3D model of mannequin (RefID {:x})", mannequinRefID);
+		logger::error("Failed to access the 3D model of a mannequin (RefID {:x})", mannequinRefID);
 		return;
 	}
 		

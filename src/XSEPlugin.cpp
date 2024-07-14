@@ -1,10 +1,12 @@
 #include "PCH.h"
+#include "Plugin.h"
 #include "MannequinInterface.h"
 #include "Events.h"
 #include "SKEE.h"
 #include "SKEEInterface.cpp"
 
 using namespace SKSE;
+using namespace Plugin;
 
 void InitializeHooks()
 {
@@ -27,28 +29,21 @@ void InitializeMessaging()
 
 void InitializeLogging()
 {
+	auto path = logger::log_directory();
+	if (!path)
+		util::report_and_fail("Failed to find standard logging directory"sv);
+
+	*path /= std::format("{}.log"sv, PluginName);
+
 #ifndef NDEBUG
 	const auto level = spdlog::level::trace;
+	auto sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
 #else
 	const auto level = spdlog::level::info;
+	auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true);
 #endif
 
-	auto path = log::log_directory();
-	if (!path)
-		util::report_and_fail("Unable to lookup SKSE logs directory.");
-
-	*path /= PluginDeclaration::GetSingleton()->GetName();
-	*path += L".log";
-
-	std::shared_ptr<spdlog::logger> log;
-
-	if (IsDebuggerPresent()) {
-		log = std::make_shared<spdlog::logger>(
-			"Global", std::make_shared<spdlog::sinks::msvc_sink_mt>());
-	} else {
-		log = std::make_shared<spdlog::logger>(
-			"Global", std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true));
-	}
+	auto log = std::make_shared<spdlog::logger>("global log"s, std::move(sink));
 
 	log->set_level(level);
 	log->flush_on(level);
@@ -56,6 +51,10 @@ void InitializeLogging()
 	spdlog::set_default_logger(std::move(log));
 	spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%t] [%s:%#] %v");
 }
+
+SKSEPluginInfo(
+	.Version = PluginVersion,
+	.Name = PluginName)
 
 SKSEPluginLoad(const LoadInterface* skse)
 {
@@ -65,14 +64,12 @@ SKSEPluginLoad(const LoadInterface* skse)
 
 	InitializeLogging();
 
-	auto* plugin = PluginDeclaration::GetSingleton();
-	auto  version = plugin->GetVersion();
-
-	log::info("{} {} is loading...", plugin->GetName(), version);
+	logger::info("Skyrim v{}", REL::Module::get().version());
+	logger::info("{} {} is loading", PluginName, PluginVersion);
 
 	Init(skse);
 	InitializeMessaging();
 
-	log::info("{} has finished loading.", plugin->GetName());
+	logger::info("{} has finished loading", PluginName);
 	return true;
 }

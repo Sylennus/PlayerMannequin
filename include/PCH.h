@@ -31,8 +31,11 @@
 #include <ShlObj_core.h>
 #include <Windows.h>
 
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/msvc_sink.h>
+#ifdef NDEBUG
+#	include <spdlog/sinks/basic_file_sink.h>
+#else
+#	include <spdlog/sinks/msvc_sink.h>
+#endif
 
 #pragma warning(pop)
 

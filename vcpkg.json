@@ -1,22 +1,21 @@
 {
-    "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
-    "name": "commonlibsse-plugin",
-    "version-string": "1.0.0",
-    "port-version": 0,
-    "description": "SKSE plugin based on CommonLibSSE, for unified AE/SE/VR deployment.",
-    "homepage": "https://www.skyrimng.com",
-    "license": "Apache-2.0",
-    "features": {
-        "plugin": {
-            "description": "Build the SKSE plugin.",
-            "dependencies": [
-                "commonlibsse-ng",
-                "nlohmann-json",
-                "simpleini"
-            ]
-        }
-    },
-    "default-features": [
-        "plugin"
-    ]
+	"$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+	"name": "commonlibsse-plugin",
+	"version-string": "1.0.0",
+	"port-version": 0,
+	"description": "SKSE plugin based on CommonLibSSE, for unified AE/SE/VR deployment.",
+	"homepage": "https://www.skyrimng.com",
+	"license": "Apache-2.0",
+	"features": {
+		"plugin": {
+			"description": "Build the SKSE plugin.",
+			"dependencies": [
+				"commonlibsse-ng",
+				"eastl",
+				"directxtk"
+			]
+		}
+	},
+	"default-features": ["plugin"],
+	"builtin-baseline": "21fa4ccecfefd96bb16faac4af17fcb900d4f8b3"
 }
